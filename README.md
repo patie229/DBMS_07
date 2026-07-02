@@ -118,12 +118,23 @@ Exit the REPL:
 **Question 1.1:** In the REPL, typing `2 ** 10` without `print` still shows
 `1024`. Why does this work in the REPL but *not* in a script file?
 
-> *Your answer:*
+> **Answer:** The REPL is a Read-Eval-Print Loop: after evaluating each
+> expression it automatically prints the `repr()` of the resulting value to
+> the screen. This automatic echo is a feature of the interactive shell, not
+> of the Python language. When you run a script file, the interpreter
+> evaluates each expression but does **not** echo the result — the value of
+> `2 ** 10` is computed and then simply discarded. To see output from a
+> script you must explicitly call `print(2 ** 10)`.
 
 **Question 1.2:** The f-string format specifier `:.2f` controls how `price`
 is displayed. What does it mean, and what would `:.4f` produce for `18.9`?
 
-> *Your answer:*
+> **Answer:** In `{price:.2f}`, the `f` means "fixed-point (decimal)
+> formatting" and `.2` means "round to and always show 2 digits after the
+> decimal point". So `18.90` is displayed as `18.90`.
+>
+> With `:.4f`, the value `18.9` would be padded to four decimal places and
+> displayed as `18.9000`.
 
 ---
 
@@ -167,13 +178,29 @@ Exit the REPL:
 can write `sqrt(144)` without the `math.` prefix. What is the drawback of
 this style compared to `import math`?
 
-> *Your answer:*
+> **Answer:** `from math import sqrt` puts `sqrt` directly into your module's
+> namespace, which removes the visual cue that tells you where the function
+> comes from and creates a risk of **name collisions**. If you (or another
+> imported module) also define a function called `sqrt`, one silently
+> overwrites the other, and it becomes hard to tell which `sqrt` is being
+> called. With `import math`, every call is written `math.sqrt`, so the
+> origin is always explicit and there is no clash with a local `sqrt`.
 
 **Question 2.2:** The standard library is always available — it requires no
 installation. Name two other standard library modules (not `math`) and
 describe in one sentence what each one is used for.
 
-> *Your answer:*
+> **Answer:**
+> - **`datetime`** — provides classes for working with dates and times
+>   (parsing, arithmetic, formatting), e.g. computing the number of days
+>   between two dates.
+> - **`json`** — serializes Python objects to JSON text and parses JSON back
+>   into Python objects, used for reading/writing config files and API
+>   payloads.
+>
+> (Other valid answers: `os` for interacting with the operating system and
+> filesystem; `random` for random numbers; `sys` for interpreter/runtime
+> access; `pathlib` for object-oriented filesystem paths.)
 
 ---
 
@@ -251,13 +278,30 @@ it only under `if __name__ == "__main__"`. What is `__name__` set to when the
 file is run directly? What is it set to when the file is *imported* by another
 module — and why does this distinction matter?
 
-> *Your answer:*
+> **Answer:** When the file is **run directly** (`python3 berechnung.py`),
+> Python sets the module's `__name__` variable to the string `"__main__"`,
+> so the `if __name__ == "__main__":` block executes and `main()` runs.
+>
+> When the file is **imported** by another module
+> (`import berechnung`), `__name__` is set to the module's own name,
+> `"berechnung"`, so the guard is `False` and `main()` does **not** run
+> automatically.
+>
+> This distinction matters because it lets a file serve two roles at once:
+> a runnable program *and* a reusable library. Another module can
+> `import berechnung` to reuse `kreisflaeche()` without triggering the
+> script's top-level behaviour (printing, querying, etc.).
 
 **Question 3.2:** The `kreisflaeche` function could be defined without
 importing `math` by hard-coding `3.14159` instead of `math.pi`. Give one
 concrete reason why using `math.pi` is preferable.
 
-> *Your answer:*
+> **Answer:** `math.pi` provides π to the full precision of a double-precision
+> float (about 15–16 significant digits: `3.141592653589793`), whereas
+> `3.14159` truncates it to 6 digits. For any non-trivial radius the
+> hard-coded constant introduces a rounding error that grows with the
+> computation, producing a measurably wrong area. Using `math.pi` is more
+> accurate, self-documenting, and avoids the risk of a mistyped constant.
 
 ---
 
@@ -510,13 +554,37 @@ git push
 `uv.lock` be committed to version control while generated files like `.venv/`
 should not?
 
-> *Your answer:*
+> **Answer:** `pyproject.toml` declares the project's **direct dependencies**
+> with loose version ranges (e.g. `"rich"` means "any compatible version").
+> `uv.lock` records the **exact resolved versions** of every package —
+> including transitive dependencies — plus their hashes, capturing the
+> complete, reproducible state of the environment.
+>
+> `uv.lock` should be committed because it guarantees that everyone who runs
+> `uv sync` gets the *identical* set of package versions, making builds
+> reproducible across machines and over time. `.venv/` should **not** be
+> committed because it is a large, machine-specific, fully regenerable
+> artifact: it contains compiled binaries and paths tied to one operating
+> system and can be rebuilt from `pyproject.toml` + `uv.lock` at any time
+> (so it belongs in `.gitignore`).
 
 **Question 4.2:** `uv run python3 berechnung.py` uses the virtual
 environment's Python. What would happen if you ran `python3 berechnung.py`
 directly (without `uv run`) and `rich` is not installed system-wide?
 
-> *Your answer:*
+> **Answer:** Running `python3 berechnung.py` directly invokes the **system**
+> Python, which does not have `rich` installed. The script would fail at the
+> import line with:
+>
+> ```
+> ModuleNotFoundError: No module named 'rich'
+> ```
+>
+> `rich` is installed only inside the project's `.venv/`, and only `uv run`
+> (or manually activating the environment) puts that environment's packages
+> on the import path. This is exactly the isolation benefit of a virtual
+> environment: the dependency exists for the project but does not pollute the
+> system Python.
 
 ---
 
@@ -648,20 +716,51 @@ git push
 query. What is the role of a cursor in the database connection model?
 Why is one connection able to hold multiple cursors simultaneously?
 
-> *Your answer:*
+> **Answer:** A **cursor** is the object through which SQL statements are
+> executed and result rows are fetched. It represents a single work context:
+> it holds the current statement, its result set, and a position (the point
+> up to which rows have been read via `fetchone`/`fetchall`). The
+> **connection** represents the session with the database (authentication,
+> transaction state); the cursor is where individual queries actually run.
+>
+> One connection can hold multiple cursors simultaneously because each cursor
+> keeps its own independent statement and result position. This lets you,
+> for example, iterate over the results of one query with one cursor while
+> running a second query on another cursor — all within the same session and
+> the same transaction.
 
 **Question 5.2:** The connection parameters (username, password, host) are
 written directly in the script as `DB_CONFIG`. Why is this a security problem
 in a real project? Name one common alternative for storing credentials outside
 the source code.
 
-> *Your answer:*
+> **Answer:** Hard-coding credentials in the source is a security problem
+> because the code is typically committed to version control: the password
+> then lives in the Git history (and on every clone, fork, and CI runner)
+> forever, even if you later remove it. Anyone with read access to the
+> repository — or to a leaked copy — obtains the database password.
+>
+> A common alternative is to store credentials in **environment variables**
+> (read at runtime with `os.environ`), often loaded from a `.env` file that
+> is listed in `.gitignore` and never committed. Other valid options are a
+> dedicated secrets manager (HashiCorp Vault, AWS Secrets Manager) or a
+> PostgreSQL `.pgpass` file.
 
 **Question 5.3:** `cursor.fetchall()` returns a list of tuples. The script
 accesses `row[0]`, `row[1]`, etc. by index. What is the risk of this approach,
 and which `psycopg2` cursor subclass would return named columns instead?
 
-> *Your answer:*
+> **Answer:** Accessing columns by positional index is **fragile**: the code
+> depends on the exact order of columns in the `SELECT` list. If someone later
+> reorders the columns, inserts a new one, or removes one, every `row[i]`
+> reference silently shifts to the wrong value — a bug that produces incorrect
+> data without raising an error. The indices are also unreadable (`row[3]`
+> tells the reader nothing about what it holds).
+>
+> The `psycopg2.extras.RealDictCursor` subclass returns each row as a
+> dictionary keyed by column name, so you access `row["tage_ausgeliehen"]`
+> instead of `row[3]`. (`NamedTupleCursor` is another option, giving
+> attribute access like `row.tage_ausgeliehen`.)
 
 ---
 
@@ -773,12 +872,30 @@ git push
 automatically. What standard does it use to describe the API, and what
 advantage does machine-readable API documentation have over a PDF?
 
-> *Your answer:*
+> **Answer:** FastAPI describes the API using the **OpenAPI** specification
+> (formerly known as Swagger), serving a machine-readable JSON schema at
+> `/openapi.json` and rendering it interactively at `/docs` (Swagger UI) and
+> `/redoc`.
+>
+> A machine-readable specification has advantages a PDF cannot offer: it stays
+> **in sync with the code** (FastAPI generates it from the actual endpoints
+> and type hints, so it cannot drift out of date); it is **interactive**
+> (clients can send real test requests straight from `/docs`); and it can be
+> **consumed by tools** to auto-generate client libraries, run contract
+> tests, or validate requests. A PDF is static, manually maintained, and
+> quickly becomes outdated.
 
 **Question 6.2:** The `--reload` flag is useful during development but should
 not be used in production. Why?
 
-> *Your answer:*
+> **Answer:** `--reload` makes uvicorn watch the source files and restart the
+> server whenever a file changes. This is convenient in development but
+> harmful in production because: it consumes extra CPU/memory watching the
+> filesystem; an unexpected file change would restart the server and drop
+> in-flight requests; and it runs a single worker process, so it cannot use
+> multiple workers for real concurrency. In production you instead run a fixed
+> number of workers (e.g. `uvicorn --workers 4` or behind Gunicorn) with
+> reload disabled, for stability and performance.
 
 ---
 
@@ -955,20 +1072,55 @@ git push
 What would be the security risk of building the SQL string by concatenation
 (`"VALUES ('" + mitglied.nachname + "'...)`)? Name the attack this prevents.
 
-> *Your answer:*
+> **Answer:** Building SQL by string concatenation lets user-supplied input
+> become part of the SQL command itself. A malicious value such as
+> `Robert'); DROP TABLE mitglied; --` would be interpreted as SQL and could
+> delete data, read other tables, or bypass conditions. This is the
+> classic **SQL injection** attack.
+>
+> Parameterized queries (`%s` placeholders with a separate values tuple)
+> prevent it: `psycopg2` sends the query and the data separately and escapes
+> the values, so user input is always treated as *data*, never as executable
+> SQL. This is the standard and only reliable defense against SQL injection.
 
 **Question 7.2:** The `RealDictCursor` in endpoints 1 and 2 returns each row
 as a dictionary instead of a tuple. Why does this make the API response more
 useful to a client that receives the JSON output?
 
-> *Your answer:*
+> **Answer:** With `RealDictCursor`, each row is a dictionary keyed by column
+> name, so when FastAPI serializes it the JSON becomes a self-describing
+> object:
+>
+> ```json
+> {"nachname": "Sommer", "vorname": "Klara", "titel": "Homo Faber", "tage_ausgeliehen": 30}
+> ```
+>
+> A plain tuple would serialize to a positional array
+> `["Sommer", "Klara", "Homo Faber", 30]`, forcing the client to know the
+> exact column order and hard-code indices. The named keys make the response
+> readable, self-documenting, and robust: the client accesses
+> `row["titel"]` and is unaffected if the column order changes.
 
 **Question 7.3:** A caller of `GET /ausleihen/offen` receives a list of open
 loans without knowing anything about the underlying table structure, join logic,
 or database credentials. Name two concrete advantages this abstraction provides
 compared to giving every caller direct database access.
 
-> *Your answer:*
+> **Answer:**
+> 1. **Security & access control:** Callers never receive the database
+>    credentials and cannot run arbitrary SQL. The API exposes only the
+>    specific, safe operations it chooses to offer, so a client cannot read
+>    tables it shouldn't or drop data. Credentials live in one place (the
+>    API), not scattered across every client.
+> 2. **Decoupling / maintainability:** The internal schema can change — tables
+>    renamed, the four-table JOIN rewritten, columns added — without breaking
+>    any client, as long as the JSON contract of `/ausleihen/offen` stays the
+>    same. Clients depend on the stable API, not on the volatile database
+>    structure.
+>
+> (Other valid advantages: consistent business logic enforced in one place;
+> the ability to add caching, rate-limiting, logging, or validation centrally;
+> and language independence — any HTTP client can call it.)
 
 ---
 
@@ -980,7 +1132,19 @@ can call `/ausleihen/offen` without knowing SQL. What is the general software
 engineering principle behind this, and where else in a typical application
 stack does the same principle appear?
 
-> *Your answer:*
+> **Answer:** The general principle is **separation of concerns** through
+> **abstraction / information hiding**: each layer exposes a simple, stable
+> interface and hides its internal complexity, so that a change on one side
+> of the boundary does not ripple across the whole system. The frontend
+> concerns itself with presentation, the API with business logic, the
+> database with storage — each behind a clean contract.
+>
+> The same principle appears throughout the stack: a function hides its
+> implementation behind its signature; a class hides its state behind its
+> public methods; an operating system hides hardware behind system calls; a
+> device driver hides device specifics behind a uniform interface; and the
+> SQL engine itself hides physical storage and indexing behind the relational
+> query interface.
 
 **Question B – Stateless HTTP vs. database connections:**  
 Each of the three endpoints opens a new database connection and closes it after
@@ -988,7 +1152,17 @@ the query. In a production system with hundreds of simultaneous requests this
 would be inefficient. What is the standard solution, and which Python library
 provides it for `psycopg2`?
 
-> *Your answer:*
+> **Answer:** Opening a fresh TCP connection and authenticating for every
+> request is expensive (network round-trips, PostgreSQL backend process
+> startup). The standard solution is **connection pooling**: a pool of
+> pre-established database connections is created once and reused across
+> requests — each request borrows a connection, uses it, and returns it to
+> the pool instead of closing it.
+>
+> For `psycopg2`, the built-in `psycopg2.pool` module provides
+> `SimpleConnectionPool` and `ThreadedConnectionPool`. (In modern stacks,
+> higher-level poolers such as **psycopg3's** pool, **SQLAlchemy's** engine
+> pool, or an external pooler like **PgBouncer** are also common.)
 
 **Question C – Authentication:**  
 The API currently has no access control — anyone who can reach the server on
@@ -997,7 +1171,22 @@ to a FastAPI application are **JWT tokens** (stateless, validated by the API
 itself) and **Keycloak** (external identity provider, acting as middleware).
 What is the main operational difference between the two approaches?
 
-> *Your answer:*
+> **Answer:** With **JWT tokens**, the API itself is responsible for issuing
+> and validating tokens: a signed token carries the user's claims, and each
+> request is verified locally by checking the signature — no call to an
+> external service is needed. It is self-contained and simple to deploy, but
+> the application must implement login, token issuance, refresh, and
+> revocation itself.
+>
+> With **Keycloak** (or a similar external identity provider), authentication
+> is delegated to a **separate, dedicated system** that manages users, login
+> flows, roles, single sign-on, and token issuance. The API only trusts and
+> validates tokens issued by Keycloak. The operational difference is *who owns
+> identity management*: JWT-in-the-app keeps everything inside your service
+> (less infrastructure, more code to maintain and secure yourself), whereas
+> Keycloak runs as an additional service you must deploy and operate but
+> which centralizes identity for many applications and provides SSO,
+> user federation, and admin tooling out of the box.
 
 **Question D – The abstraction chain:**  
 You have now built a complete chain: raw data in PostgreSQL → SQL query in
@@ -1005,7 +1194,20 @@ Python → JSON response from FastAPI → curl client. Describe in two sentences
 what each link in this chain contributes and why removing any one of them
 would make the system harder to use or maintain.
 
-> *Your answer:*
+> **Answer:** PostgreSQL provides reliable, structured, queryable storage with
+> integrity guarantees; the psycopg2/Python layer translates a specific
+> question into SQL and turns the result rows into Python objects; FastAPI
+> exposes that logic as a stable, documented HTTP contract that any client can
+> call over the network; and the curl client consumes that contract without
+> needing to know anything about the database.
+>
+> Removing any link collapses a boundary and pushes its complexity onto the
+> others: without the database you lose integrity and querying and must
+> reimplement storage; without the Python layer the client would have to
+> speak SQL directly; without the API every client would need database
+> credentials and knowledge of the schema; and without a standard client
+> interface each consumer would need bespoke integration code — in every case
+> the system becomes less secure, less reusable, and harder to maintain.
 
 ---
 
