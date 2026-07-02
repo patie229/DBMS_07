@@ -59,6 +59,8 @@ pg_isready
 > **Screenshot 1:** Take a screenshot showing all three version/status checks.
 >
 > `[insert screenshot]`
+> <img width="682" height="483" alt="Capture d’écran 2026-07-02 à 10 31 46" src="https://github.com/user-attachments/assets/5706e3cb-aa2f-46a5-b02e-d41ceb7ef86b" />
+
 
 ---
 
@@ -112,6 +114,8 @@ Exit the REPL:
 > including the f-string output.
 >
 > `[insert screenshot]`
+> <img width="682" height="539" alt="Capture d’écran 2026-07-02 à 10 38 16" src="https://github.com/user-attachments/assets/479f0e9e-0644-4281-937c-a6b67caf38df" />
+
 
 ### Questions for Section 1
 
@@ -262,6 +266,8 @@ python3 berechnung.py
 > `python3 berechnung.py`.
 >
 > `[insert screenshot]`
+> <img width="682" height="539" alt="Capture d’écran 2026-07-02 à 10 49 04" src="https://github.com/user-attachments/assets/fbe07c89-8e9e-448c-ac17-fbe7ca8c97bc" />
+
 
 ### Step 4 – Commit
 
@@ -462,6 +468,9 @@ uv --version
 > **Screenshot 4:** Take a screenshot showing the `uv --version` output.
 >
 > `[insert screenshot]`
+> <img width="682" height="483" alt="Capture d’écran 2026-07-02 à 13 01 49" src="https://github.com/user-attachments/assets/83f72c35-6869-430e-b97b-959ab056febf" />
+
+
 
 ---
 
@@ -538,6 +547,8 @@ uv run python3 berechnung.py
 > from `uv run`.
 >
 > `[insert screenshot]`
+> <img width="682" height="483" alt="Capture d’écran 2026-07-02 à 13 07 50" src="https://github.com/user-attachments/assets/712d5aa6-0842-4368-863f-7b02f3fdce20" />
+
 
 ### Step 5 – Commit
 
@@ -701,6 +712,8 @@ uv run python3 abfrage.py
 > **Screenshot 6:** Take a screenshot showing the query result table.
 >
 > `[insert screenshot]`
+> <img width="682" height="515" alt="Capture d’écran 2026-07-02 à 12 23 38" src="https://github.com/user-attachments/assets/8ce7fa17-e18c-4e0d-ad40-99a7a6f80166" />
+
 
 ### Step 4 – Commit
 
@@ -855,6 +868,8 @@ from your code.
 > uvicorn startup log in the other terminal.
 >
 > `[insert screenshot]`
+> <img width="569" height="752" alt="Capture d’écran 2026-07-02 à 12 40 52" src="https://github.com/user-attachments/assets/1f502331-dd46-4034-bf63-e6d27827e7ac" />
+
 
 ### Step 4 – Commit
 
@@ -1056,6 +1071,9 @@ Try posting the same e-mail a second time and observe the 409 error response.
 > endpoints, including the 409 error on the duplicate POST.
 >
 > `[insert screenshot]`
+> <img width="569" height="752" alt="Capture d’écran 2026-07-02 à 12 49 10" src="https://github.com/user-attachments/assets/3560075e-3481-4a14-8a5d-0434ff803025" />
+
+
 
 ### Step 4 – Commit
 
